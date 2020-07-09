@@ -3,6 +3,7 @@ package com.francis.housedesigntablet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -22,7 +23,8 @@ class RecycleAdapterView : RecyclerView.Adapter<RecycleAdapterView.RecycleHolder
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecycleHolderView {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_shape_views, parent, false)
+        val view =
+            LayoutInflater.from(parent.context).inflate(R.layout.item_shape_views, parent, false)
         return RecycleHolderView(view)
     }
 
@@ -42,6 +44,7 @@ class RecycleAdapterView : RecyclerView.Adapter<RecycleAdapterView.RecycleHolder
                 val model: ShapeModel = itemList.get(adapterPosition)
                 model.width = view?.width!!
                 model.height = view.height
+                model.view = view
                 val dragShadowBuilder = View.DragShadowBuilder(view)
                 ViewCompat.startDragAndDrop(view, null, dragShadowBuilder, model, 0)
 

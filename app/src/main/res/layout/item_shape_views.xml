@@ -5,7 +5,11 @@
     android:id="@+id/layoutView"
     android:layout_width="50dp"
     android:layout_height="50dp"
-    android:layout_margin="3dp"
-    android:background="@drawable/bg_rect_red">
+    android:layout_margin="3dp">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_rect_red" />
 
 </RelativeLayout>

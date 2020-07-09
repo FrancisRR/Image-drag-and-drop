@@ -1,20 +1,18 @@
 package com.francis.housedesigntablet
 
 import android.os.Bundle
-import android.view.DragEvent
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
+import android.view.*
+import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.francis.housedesigntablet.utils.UiUtils
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_test.*
 
 
-class MainActivity : AppCompatActivity(), View.OnTouchListener {
+class MainActivity : AppCompatActivity(), View.OnDragListener {
 
     private val TAG by lazy { MainActivity::class.java.simpleName }
 
@@ -30,7 +28,7 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
     private fun setUi() {
         setInstance()
         setAction()
-        handleDrag()
+
     }
 
     private fun setInstance() {
@@ -51,65 +49,119 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
         val list = mutableListOf<ShapeModel>()
         list.add(ShapeModel(1, 0, 0))
         adapter?.setAdapterList(list)
-        innerAdapter?.setAdapterList(list)
+
+        val viewsList = mutableListOf<ShapeModel>()
+        viewsList.add(ShapeModel(2, 0, 0))
+        innerAdapter?.setAdapterList(viewsList)
+
+
+        relContainer.setOnDragListener(this)
     }
 
+    override fun onDrag(parentView: View?, event: DragEvent?): Boolean {
+        when (event?.action) {
+            DragEvent.ACTION_DRAG_ENTERED ->
+                UiUtils.appErrorLog(TAG, "Entered")
+            DragEvent.ACTION_DRAG_STARTED ->
+                UiUtils.appErrorLog(TAG, "Started")
+            DragEvent.ACTION_DRAG_ENDED ->
+                UiUtils.appErrorLog(TAG, "Ended")
+            DragEvent.ACTION_DRAG_EXITED ->
+                UiUtils.appErrorLog(TAG, "Exited")
+            DragEvent.ACTION_DRAG_LOCATION ->
+                UiUtils.appErrorLog(TAG, "Drag Location")
+            DragEvent.ACTION_DROP -> {
+                val dropX = event.x
+                val dropY = event.y
 
-    private fun handleDrag() {
-        relContainer.setOnDragListener(object : View.OnDragListener {
-            override fun onDrag(v: View?, event: DragEvent?): Boolean {
-                when (event?.action) {
-                    DragEvent.ACTION_DRAG_ENTERED ->
-                        UiUtils.appErrorLog(TAG, "Entered")
-                    DragEvent.ACTION_DRAG_STARTED ->
-                        UiUtils.appErrorLog(TAG, "Started")
-                    DragEvent.ACTION_DRAG_ENDED ->
-                        UiUtils.appErrorLog(TAG, "Ended")
-                    DragEvent.ACTION_DRAG_EXITED ->
-                        UiUtils.appErrorLog(TAG, "Exited")
-                    DragEvent.ACTION_DRAG_LOCATION ->
-                        UiUtils.appErrorLog(TAG, "Drag Location")
-                    DragEvent.ACTION_DROP -> {
-                        val dropX = event.x
-                        val dropY = event.y
-                        val state: ShapeModel = event.localState as ShapeModel
+                val state: ShapeModel = event.localState as ShapeModel
 
-                        val view: RelativeLayout = LayoutInflater.from(this@MainActivity).inflate(
-                            R.layout.item_shape, relContainer, false
+                if (state.id == 1) {
+                    val childView: RelativeLayout =
+                        LayoutInflater.from(this@MainActivity).inflate(
+                            R.layout.item_shape, parentView as RelativeLayout, false
                         ) as RelativeLayout
-//                        shape.setImageResource(state.item.getImageDrawable())
-                        view.setX(dropX - state.width as Int / 2)
-                        view.setY(dropY - state.height as Int / 2)
-                        view.getLayoutParams().width = state.width
-                        view.getLayoutParams().height = state.height
-                        relContainer.addView(view)
-                        view.setOnTouchListener(this@MainActivity)
-                        UiUtils.appErrorLog(TAG, "Drop")
-                    }
+                    childView.setX(dropX - state.width as Int / 2)
+                    childView.setY(dropY - state.height as Int / 2)
+                    childView.getLayoutParams().width = state.width
+                    childView.getLayoutParams().height = state.height
+                    (parentView as RelativeLayout).addView(childView)
+                    childView.setOnDragListener(this@MainActivity)
+                    childView.setOnTouchListener(View.OnTouchListener { v, event ->
+                        onTouchOne(v, event)
+                        return@OnTouchListener true
+                    })
 
+                } else if (state.id == 3) {
 
+                    val oldView = (event.localState as ShapeModel).view
+
+                    val owner = oldView?.parent as ViewGroup
+                    owner.removeView(oldView)
+
+                    val childView: RelativeLayout =
+                        LayoutInflater.from(this@MainActivity).inflate(
+                            R.layout.item_shape_views, parentView as RelativeLayout, false
+                        ) as RelativeLayout
+                    childView.setX(dropX - state.width as Int / 2)
+                    childView.setY(dropY - state.height as Int / 2)
+                    childView.getLayoutParams().width = state.width
+                    childView.getLayoutParams().height = state.height
+                    (parentView as RelativeLayout).addView(childView)
+                    childView.setOnTouchListener(View.OnTouchListener { v, event ->
+                        onTouchTwo(v, event)
+                        return@OnTouchListener true
+                    })
+                } else {
+                    val childView: RelativeLayout =
+                        LayoutInflater.from(this@MainActivity).inflate(
+                            R.layout.item_shape_views, parentView as RelativeLayout, false
+                        ) as RelativeLayout
+                    childView.setX(dropX - state.width as Int / 2)
+                    childView.setY(dropY - state.height as Int / 2)
+                    childView.getLayoutParams().width = state.width
+                    childView.getLayoutParams().height = state.height
+                    (parentView as RelativeLayout).addView(childView)
+                    childView.setOnTouchListener(View.OnTouchListener { v, event ->
+                        onTouchTwo(v, event)
+                        return@OnTouchListener true
+                    })
                 }
-                return true
+
+                UiUtils.appErrorLog(TAG, "Drop")
             }
-        })
+
+
+        }
+        return true
     }
-
-
-    var windowwidth = 0
-    var windowheight = 0
 
 
     private var xDelta = 0
     private var yDelta = 0
 
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+    fun onTouchOne(v: View?, event: MotionEvent?) {
+        touchMoveCommonAction(v, event)
+    }
 
+    fun onTouchTwo(v: View?, event: MotionEvent?) {
+        val model: ShapeModel = ShapeModel(3)
+        model.width = v?.width!!
+        model.height = v.height
+        model.view = v
+        val dragShadowBuilder = View.DragShadowBuilder(v)
+        ViewCompat.startDragAndDrop(v, null, dragShadowBuilder, model, 0)
+        touchMoveCommonAction(v, event)
+    }
+
+
+    private fun touchMoveCommonAction(v: View?, event: MotionEvent?) {
         val x = event!!.rawX.toInt()
         val y = event.rawY.toInt()
 
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
-                val lParams =  v!!.getLayoutParams() as (RelativeLayout.LayoutParams)
+                val lParams = v!!.getLayoutParams() as (RelativeLayout.LayoutParams)
                 xDelta = x - lParams.leftMargin
                 yDelta = y - lParams.topMargin
             }
@@ -119,7 +171,7 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
             )
                 .show()
             MotionEvent.ACTION_MOVE -> {
-                val layoutParams = v!!.getLayoutParams() as (RelativeLayout.LayoutParams)
+                val layoutParams = v!!.layoutParams as (RelativeLayout.LayoutParams)
                 layoutParams.leftMargin = x - xDelta
                 layoutParams.topMargin = y - yDelta
                 layoutParams.rightMargin = 0
@@ -127,10 +179,7 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
                 v.setLayoutParams(layoutParams)
             }
         }
-
-
-
-
-        return true
     }
+
+
 }
